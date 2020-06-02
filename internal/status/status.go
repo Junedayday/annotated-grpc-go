@@ -37,23 +37,22 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-// Status represents an RPC status code, message, and details.  It is immutable
-// and should be created with New, Newf, or FromProto.
+// 这个Status里定义了一个proto生成的结构
+// Code: 必须为 codes.Code 类型
+// Message: 用户自定义的错误信息，建议为英文
 type Status struct {
 	s *spb.Status
 }
 
-// New returns a Status representing c and msg.
 func New(c codes.Code, msg string) *Status {
 	return &Status{s: &spb.Status{Code: int32(c), Message: msg}}
 }
 
-// Newf returns New(c, fmt.Sprintf(format, a...)).
 func Newf(c codes.Code, format string, a ...interface{}) *Status {
 	return New(c, fmt.Sprintf(format, a...))
 }
 
-// FromProto returns a Status representing s.
+// 因为传入的是指针，为了防止后续外部发生修改，所以采用了Clone的方法
 func FromProto(s *spb.Status) *Status {
 	return &Status{s: proto.Clone(s).(*spb.Status)}
 }
@@ -92,7 +91,7 @@ func (s *Status) Proto() *spb.Status {
 	return proto.Clone(s.s).(*spb.Status)
 }
 
-// Err returns an immutable error representing s; returns nil if s.Code() is OK.
+// OK 时返回nil，错误时返回一个克隆的错误信息
 func (s *Status) Err() error {
 	if s.Code() == codes.OK {
 		return nil

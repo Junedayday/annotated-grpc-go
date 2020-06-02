@@ -41,41 +41,43 @@ import (
 // RPC status code, message, and details.  It is immutable and should be
 // created with New, Newf, or FromProto.
 // https://godoc.org/google.golang.org/grpc/internal/status
+
+// status 错误代码的相关实现
+// Tip 这里的代码目录结构可以学习一下：
+// 外部可被引用的部分，相对简洁
+// 内部的实现放在internal中，避免外部包的引用
 type Status = status.Status
 
-// New returns a Status representing c and msg.
+// Tip 可以对比error包中的Wrap，思考一下各自适合什么场景
 func New(c codes.Code, msg string) *Status {
 	return status.New(c, msg)
 }
 
-// Newf returns New(c, fmt.Sprintf(format, a...)).
 func Newf(c codes.Code, format string, a ...interface{}) *Status {
 	return New(c, fmt.Sprintf(format, a...))
 }
 
-// Error returns an error representing c and msg.  If c is OK, returns nil.
+// 这里的Err()里值得看看
 func Error(c codes.Code, msg string) error {
 	return New(c, msg).Err()
 }
 
-// Errorf returns Error(c, fmt.Sprintf(format, a...)).
 func Errorf(c codes.Code, format string, a ...interface{}) error {
 	return Error(c, fmt.Sprintf(format, a...))
 }
 
-// ErrorProto returns an error representing s.  If s.Code is OK, returns nil.
 func ErrorProto(s *spb.Status) error {
 	return FromProto(s).Err()
 }
 
-// FromProto returns a Status representing s.
+// 将原始的proto类型的错误，包装到status的错误中
 func FromProto(s *spb.Status) *Status {
 	return status.FromProto(s)
 }
 
-// FromError returns a Status representing err if it was produced from this
-// package or has a method `GRPCStatus() *Status`. Otherwise, ok is false and a
-// Status is returned with codes.Unknown and the original error message.
+// 从error中提取status信息
+// 这里并不是根据类型来判断，而是通过是否定义了接口
+// Tips 用接口定义的方式扩展性很高
 func FromError(err error) (s *Status, ok bool) {
 	if err == nil {
 		return nil, true
@@ -88,17 +90,16 @@ func FromError(err error) (s *Status, ok bool) {
 	return New(codes.Unknown, err.Error()), false
 }
 
-// Convert is a convenience function which removes the need to handle the
-// boolean return value from FromError.
+// FromError需要处理2个返回值，这个函数是为了方便，
+// Tips 两个返回值和一个返回值各有利弊，建议好好思考利弊
+// 例如单返回值带来的便利性，但返回的信息量，例如具体错误原因，会被屏蔽
 func Convert(err error) *Status {
 	s, _ := FromError(err)
 	return s
 }
 
-// Code returns the Code of the error if it is a Status error, codes.OK if err
-// is nil, or codes.Unknown otherwise.
+// 查询错误里的Code
 func Code(err error) codes.Code {
-	// Don't use FromError to avoid allocation of OK status.
 	if err == nil {
 		return codes.OK
 	}
@@ -110,9 +111,7 @@ func Code(err error) codes.Code {
 	return codes.Unknown
 }
 
-// FromContextError converts a context error into a Status.  It returns a
-// Status with codes.OK if err is nil, or a Status with codes.Unknown if err is
-// non-nil and not a context error.
+// 集成了常用的Context两种错误情况
 func FromContextError(err error) *Status {
 	switch err {
 	case nil:
@@ -125,3 +124,4 @@ func FromContextError(err error) *Status {
 		return New(codes.Unknown, err.Error())
 	}
 }
+
