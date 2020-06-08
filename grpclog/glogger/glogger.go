@@ -31,6 +31,7 @@ func init() {
 	grpclog.SetLoggerV2(&glogger{})
 }
 
+// grpclog底层调用的是glog
 type glogger struct{}
 
 func (g *glogger) Info(args ...interface{}) {

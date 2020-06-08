@@ -26,6 +26,7 @@ import (
 )
 
 func TestLoggerV2Severity(t *testing.T) {
+	// 将3个日志的输出放到buffer里
 	buffers := []*bytes.Buffer{new(bytes.Buffer), new(bytes.Buffer), new(bytes.Buffer)}
 	SetLoggerV2(NewLoggerV2(buffers[infoLog], buffers[warningLog], buffers[errorLog]))
 
@@ -35,10 +36,10 @@ func TestLoggerV2Severity(t *testing.T) {
 
 	for i := 0; i < fatalLog; i++ {
 		buf := buffers[i]
-		// The content of info buffer should be something like:
 		//  INFO: 2017/04/07 14:55:42 INFO
 		//  WARNING: 2017/04/07 14:55:42 WARNING
 		//  ERROR: 2017/04/07 14:55:42 ERROR
+		// Tip 值得一提的是，高级别的错误会包含低级别的输出
 		for j := i; j < fatalLog; j++ {
 			b, err := buf.ReadBytes('\n')
 			if err != nil {
@@ -51,8 +52,8 @@ func TestLoggerV2Severity(t *testing.T) {
 	}
 }
 
-// check if b is in the format of:
 //  WARNING: 2017/04/07 14:55:42 WARNING
+// Tip 用正则匹配时检查格式，在写测试用例时比较高效
 func checkLogForSeverity(s int, b []byte) error {
 	expected := regexp.MustCompile(fmt.Sprintf(`^%s: [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} %s\n$`, severityName[s], severityName[s]))
 	if m := expected.Match(b); !m {

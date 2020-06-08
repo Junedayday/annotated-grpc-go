@@ -16,6 +16,8 @@
  *
  */
 
+// 给各部件提供了k-v存储
+
 // Package attributes defines a generic key/value store used in various gRPC
 // components.
 //
@@ -24,16 +26,14 @@ package attributes
 
 import "fmt"
 
-// Attributes is an immutable struct for storing and retrieving generic
-// key/value pairs.  Keys must be hashable, and users should define their own
-// types for keys.
+// Key必须可以hashable，是为了可以存储到map中
+// Tip Go的官方库是以简洁著称的，建议在复杂使用场景中，浅浅地封装一层
 type Attributes struct {
 	m map[interface{}]interface{}
 }
 
-// New returns a new Attributes containing all key/value pairs in kvs.  If the
-// same key appears multiple times, the last value overwrites all previous
-// values for that key.  Panics if len(kvs) is not even.
+// 按顺序写入map，格式为key1,value1,key2,value2
+// 所以出现相同的key时，老的会覆盖新的
 func New(kvs ...interface{}) *Attributes {
 	if len(kvs)%2 != 0 {
 		panic(fmt.Sprintf("attributes.New called with unexpected input: len(kvs) = %v", len(kvs)))
@@ -45,10 +45,7 @@ func New(kvs ...interface{}) *Attributes {
 	return a
 }
 
-// WithValues returns a new Attributes containing all key/value pairs in a and
-// kvs.  Panics if len(kvs) is not even.  If the same key appears multiple
-// times, the last value overwrites all previous values for that key.  To
-// remove an existing key, use a nil value.
+// WithValues会对Attributes进行扩容，注意，这里是新建出对应的Attributes
 func (a *Attributes) WithValues(kvs ...interface{}) *Attributes {
 	if len(kvs)%2 != 0 {
 		panic(fmt.Sprintf("attributes.New called with unexpected input: len(kvs) = %v", len(kvs)))
@@ -63,8 +60,6 @@ func (a *Attributes) WithValues(kvs ...interface{}) *Attributes {
 	return n
 }
 
-// Value returns the value associated with these attributes for key, or nil if
-// no value is associated with key.
 func (a *Attributes) Value(key interface{}) interface{} {
 	return a.m[key]
 }

@@ -20,6 +20,9 @@ package grpclog
 
 import "google.golang.org/grpc/internal/grpclog"
 
+// 这里定义了日志包，用到了一个关键字Deprecated
+// Tip 关键字Deprecated会帮助IDE识别弃用的字段
+
 // Logger mimics golang's standard Logger as an interface.
 //
 // Deprecated: use LoggerV2.
